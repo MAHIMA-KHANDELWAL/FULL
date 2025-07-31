@@ -1,0 +1,4 @@
+create database products ;
+
+
+# I have directly imported the dataset from scv to table using mysql workbench 

@@ -106,6 +106,189 @@ if __name__ == '__main__':
 
 
 
+
+product-ui/
+  src/
+    components/
+      ProductList.js
+      ProductDetail.js
+      ProductCard.js
+    api/
+      api.js
+    App.js
+3. API Integration (api/api.js)
+We'll centralize our API requests in api.js.
+
+javascript
+Copy
+Edit
+// src/api/api.js
+import axios from 'axios';
+
+const BASE_URL = 'http://127.0.0.1:5000/api/products'; // Adjust URL if necessary
+
+export const fetchProducts = (page = 1, perPage = 10) => {
+  return axios.get(BASE_URL, {
+    params: { page, per_page: perPage },
+  });
+};
+
+export const fetchProductById = (id) => {
+  return axios.get(`${BASE_URL}/${id}`);
+};
+4. Product List View (ProductList.js)
+This component will display all products in a grid or list format.
+
+javascript
+Copy
+Edit
+// src/components/ProductList.js
+import React, { useState, useEffect } from 'react';
+import { fetchProducts } from '../api/api';
+import { Link } from 'react-router-dom';
+import ProductCard from './ProductCard';
+
+const ProductList = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    const getProducts = async () => {
+      try {
+        const response = await fetchProducts(page);
+        setProducts(response.data.products);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      }
+    };
+    getProducts();
+  }, [page]);
+
+  const handleNextPage = () => setPage(page + 1);
+  const handlePrevPage = () => setPage(page - 1);
+
+  return (
+    <div>
+      <h1>Product List</h1>
+      {loading ? (
+        <p>Loading...</p>
+      ) : (
+        <div className="product-grid">
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      )}
+      <div>
+        <button onClick={handlePrevPage} disabled={page === 1}>
+          Previous
+        </button>
+        <button onClick={handleNextPage}>Next</button>
+      </div>
+    </div>
+  );
+};
+
+export default ProductList;
+ProductCard: This component is used for individual product display.
+
+Pagination: Next and Previous buttons are included to navigate between pages of products.
+
+5. Product Card (ProductCard.js)
+We need a separate component to show individual product details in the list.
+
+javascript
+Copy
+Edit
+// src/components/ProductCard.js
+import React from 'react';
+import { Link } from 'react-router-dom';
+
+const ProductCard = ({ product }) => {
+  return (
+    <div className="product-card">
+      <h3>{product.name}</h3>
+      <p>{product.description}</p>
+      <p>${product.price}</p>
+      <Link to={`/product/${product.id}`}>View Details</Link>
+    </div>
+  );
+};
+
+export default ProductCard;
+This component displays the product's name, description, and price and includes a link to the Product Detail page.
+
+6. Product Detail View (ProductDetail.js)
+This component will display the details of an individual product when the user clicks "View Details".
+
+javascript
+Copy
+Edit
+// src/components/ProductDetail.js
+import React, { useState, useEffect } from 'react';
+import { fetchProductById } from '../api/api';
+import { useParams } from 'react-router-dom';
+
+const ProductDetail = () => {
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const { id } = useParams(); // Get product id from URL
+
+  useEffect(() => {
+    const getProduct = async () => {
+      try {
+        const response = await fetchProductById(id);
+        setProduct(response.data);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching product:', error);
+      }
+    };
+    getProduct();
+  }, [id]);
+
+  if (loading) return <p>Loading...</p>;
+
+  return (
+    <div>
+      <h1>{product.name}</h1>
+      <p>{product.description}</p>
+      <p>Price: ${product.price}</p>
+    </div>
+  );
+};
+
+export default ProductDetail;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Initialize the database tables (use this once to create tables)#
 #with app.app_context():
 #    db.create_all()
